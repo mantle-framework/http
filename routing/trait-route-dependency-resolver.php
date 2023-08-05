@@ -11,7 +11,6 @@ namespace Mantle\Http\Routing;
 
 use Mantle\Support\Arr;
 use Mantle\Support\Reflector;
-use ReflectionClass;
 use ReflectionFunctionAbstract;
 use ReflectionMethod;
 use ReflectionParameter;
@@ -52,9 +51,17 @@ trait Route_Dependency_Resolver {
 
 		$values = array_values( $parameters );
 
-		$skippable_value = new \stdClass();
+		$skippable_value   = new \stdClass();
+		$method_parameters = [];
+		$has_typehint      = false;
 
 		foreach ( $reflector->getParameters() as $key => $parameter ) {
+			if ( $parameter->getType() ) {
+				$has_typehint = true;
+			}
+
+			$method_parameters[] = $parameter->getName();
+
 			$instance = $this->transform_dependency( $parameter, $parameters, $skippable_value );
 
 			if ( $instance !== $skippable_value ) {
@@ -65,6 +72,14 @@ trait Route_Dependency_Resolver {
 				$parameter->isDefaultValueAvailable() ) {
 				$this->splice_into_parameters( $parameters, $key, $parameter->getDefaultValue() );
 			}
+		}
+
+		// Ensure the order of the parameters matches the order defined on the method.
+		if ( $has_typehint ) {
+			$parameters = array_replace(
+				array_flip( $method_parameters ),
+				$parameters,
+			);
 		}
 
 		return $parameters;
@@ -85,12 +100,8 @@ trait Route_Dependency_Resolver {
 		// the list of parameters. If it is we will just skip it as it is probably a model
 		// binding and we do not want to mess with those; otherwise, we resolve it here.
 		if ( $class_name && ! $this->already_in_parameters( $class_name, $parameters ) ) {
-			$is_enum = PHP_VERSION_ID > 80100
-				? ( new ReflectionClass( $class_name ) )->isEnum()
-				: false;
-
 			return $parameter->isDefaultValueAvailable()
-				? ( $is_enum ? $parameter->getDefaultValue() : null )
+				? null
 				: $this->container->make( $class_name );
 		}
 

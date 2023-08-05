@@ -11,8 +11,6 @@ namespace Mantle\Http\View;
 use InvalidArgumentException;
 use Mantle\Support\Str;
 
-use function Mantle\Support\Helpers\event;
-
 /**
  * View Finder
  *
@@ -89,10 +87,8 @@ class View_Finder {
 	 * Set the default paths to load from for WordPress sites.
 	 */
 	public function set_default_paths() {
-		if ( function_exists( 'get_stylesheet_directory' ) ) {
-			$this->add_path( get_stylesheet_directory(), 'stylesheet-path' );
-			$this->add_path( get_template_directory(), 'template-path' );
-		}
+		$this->add_path( get_stylesheet_directory(), 'stylesheet-path' );
+		$this->add_path( get_template_directory(), 'template-path' );
 
 		if ( defined( 'ABSPATH' ) && defined( 'WPINC' ) ) {
 			$this->add_path( ABSPATH . WPINC . '/theme-compat', 'theme-compat' );
@@ -100,13 +96,6 @@ class View_Finder {
 
 		// Allow mantle-site to load views.
 		$this->add_path( $this->base_path . '/views', 'mantle-site' );
-
-		/**
-		 * Dispatched when the view finder is setting its default paths.
-		 *
-		 * @param View_Finder $view_finder View finder instance.
-		 */
-		event( 'mantle_view_finder_paths', $this );
 	}
 
 	/**
@@ -123,7 +112,7 @@ class View_Finder {
 			throw new InvalidArgumentException( 'Alias cannot contain invalid characters.' );
 		}
 
-		$path = Str::untrailing_slash( $path );
+		$path = \untrailingslashit( $path );
 
 		if ( $alias ) {
 			$this->paths[ $alias ] = $path;
