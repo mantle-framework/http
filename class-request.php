@@ -28,15 +28,11 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 
 	/**
 	 * Route parameters.
-	 *
-	 * @var ParameterBag|null
 	 */
 	protected ?ParameterBag $route_parameters = null;
 
 	/**
 	 * The decoded JSON content for the request.
-	 *
-	 * @var ParameterBag|null
 	 */
 	protected ?ParameterBag $json = null;
 
@@ -107,7 +103,7 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 	 * @return string
 	 */
 	public function url() {
-		return rtrim( preg_replace( '/\?.*/', '', $this->getUri() ), '/' );
+		return rtrim( (string) preg_replace( '/\?.*/', '', $this->getUri() ), '/' );
 	}
 
 	/**
@@ -179,9 +175,7 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 		return array_values(
 			array_filter(
 				$segments,
-				function ( $value ) {
-					return '' !== $value;
-				}
+				fn ( $value) => '' !== $value
 			)
 		);
 	}
@@ -190,9 +184,8 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 	 * Determine if the current request URI matches a pattern.
 	 *
 	 * @param  mixed ...$patterns
-	 * @return bool
 	 */
-	public function is( ...$patterns ) {
+	public function is( ...$patterns ): bool {
 		$path = $this->decoded_path();
 
 		foreach ( $patterns as $pattern ) {
@@ -208,9 +201,8 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 	 * Determine if the current request URL and query string matches a pattern.
 	 *
 	 * @param  mixed ...$patterns
-	 * @return bool
 	 */
-	public function full_url_is( ...$patterns ) {
+	public function full_url_is( ...$patterns ): bool {
 		$url = $this->full_url();
 
 		foreach ( $patterns as $pattern ) {
@@ -233,21 +225,17 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 
 	/**
 	 * Determine if the request is the result of an PJAX call.
-	 *
-	 * @return bool
 	 */
-	public function pjax() {
+	public function pjax(): bool {
 		return $this->headers->get( 'X-PJAX' ) == true;
 	}
 
 	/**
 	 * Determine if the request is the result of an prefetch call.
-	 *
-	 * @return bool
 	 */
-	public function prefetch() {
-		return 0 === strcasecmp( $this->server->get( 'HTTP_X_MOZ' ), 'prefetch' ) ||
-			0 === strcasecmp( $this->headers->get( 'Purpose' ), 'prefetch' );
+	public function prefetch(): bool {
+		return 0 === strcasecmp( (string) $this->server->get( 'HTTP_X_MOZ' ), 'prefetch' ) ||
+			0 === strcasecmp( (string) $this->headers->get( 'Purpose' ), 'prefetch' );
 	}
 
 	/**
@@ -317,7 +305,6 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 	 *
 	 * @param  string $key
 	 * @param  mixed  $default
-	 * @return mixed
 	 */
 	public function get( string $key, mixed $default = null ): mixed { // phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod.Found
 		return parent::get( $key, $default );
@@ -344,8 +331,6 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 
 	/**
 	 * Determine if the request is JSON.
-	 *
-	 * @return bool
 	 */
 	public function is_json(): bool {
 		return $this->has_header( 'Content-Type' ) &&
@@ -398,7 +383,7 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 			$parameters = new ParameterBag(
 				array_filter(
 					$parameters,
-					fn ( $parameter ) => 0 !== strpos( $parameter, '_' ),
+					fn ( $parameter ) => ! str_starts_with( $parameter, '_' ),
 					ARRAY_FILTER_USE_KEY
 				)
 			);
@@ -411,8 +396,6 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 
 	/**
 	 * Get route parameters.
-	 *
-	 * @return ParameterBag|null
 	 */
 	public function get_route_parameters(): ?ParameterBag {
 		return $this->route_parameters;
@@ -436,7 +419,7 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 	 * @return Route
 	 */
 	public function get_route(): ?Route {
-		return isset( $this->route ) ? $this->route : null;
+		return $this->route ?? null;
 	}
 
 	/**
@@ -455,7 +438,6 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 	 * Determine if the given offset exists.
 	 *
 	 * @param  mixed $offset
-	 * @return bool
 	 */
 	public function offsetExists( mixed $offset ): bool {
 		return Arr::has(
@@ -468,7 +450,6 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 	 * Get the value at the given offset.
 	 *
 	 * @param  mixed $offset
-	 * @return mixed
 	 */
 	public function offsetGet( mixed $offset ): mixed {
 		return $this->__get( $offset );
@@ -479,7 +460,6 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 	 *
 	 * @param  mixed $offset
 	 * @param  mixed $value
-	 * @return void
 	 */
 	public function offsetSet( mixed $offset, mixed $value ): void {
 		$this->get_input_source()->set( $offset, $value );
@@ -489,7 +469,6 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 	 * Remove the value at the given offset.
 	 *
 	 * @param  mixed $offset
-	 * @return void
 	 */
 	public function offsetUnset( mixed $offset ): void {
 		$this->get_input_source()->remove( $offset );
@@ -515,9 +494,7 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 		return Arr::get(
 			$this->all(),
 			$key,
-			function () use ( $key ) {
-				return $this->get_route_parameters()->get( $key );
-			}
+			fn () => $this->get_route_parameters()->get( $key )
 		);
 	}
 

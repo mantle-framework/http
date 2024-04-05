@@ -25,13 +25,6 @@ use Mantle\Support\Arr;
  */
 class Route_Registrar {
 	/**
-	 * Router instance.
-	 *
-	 * @var Router|null
-	 */
-	protected ?Router $router;
-
-	/**
 	 * The attributes to pass on to the router.
 	 *
 	 * @var array
@@ -84,8 +77,7 @@ class Route_Registrar {
 	 *
 	 * @param Router $router Router instance.
 	 */
-	public function __construct( Router $router ) {
-		$this->router = $router;
+	public function __construct( protected ?Router $router ) {
 	}
 
 	/**
@@ -111,7 +103,6 @@ class Route_Registrar {
 	 * Create a route group with shared attributes.
 	 *
 	 * @param  \Closure|string $callback
-	 * @return static
 	 */
 	public function group( $callback ): static {
 		$this->router->group( $this->attributes, $callback );
@@ -159,7 +150,6 @@ class Route_Registrar {
 	 * @param string         $namespace Route namespace.
 	 * @param Closure|string $route Route name or callback to register more routes.
 	 * @param array|Closure  $args Route arguments.
-	 * @return Rest_Route_Registrar
 	 */
 	public function rest_api( string $namespace, $route, $args = [] ): Rest_Route_Registrar {
 		if ( $args instanceof Closure ) {
