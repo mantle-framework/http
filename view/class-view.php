@@ -18,7 +18,7 @@ use Mantle\Support\Arr;
 /**
  * View Class
  */
-class View implements \Stringable {
+class View {
 	/**
 	 * Post object to set for the post.
 	 *
@@ -65,6 +65,8 @@ class View implements \Stringable {
 
 	/**
 	 * Get the view path.
+	 *
+	 * @return string
 	 */
 	public function get_path(): string {
 		return $this->path;
@@ -102,6 +104,8 @@ class View implements \Stringable {
 
 	/**
 	 * Get the data for the view.
+	 *
+	 * @return array
 	 */
 	public function get_variables(): array {
 		return $this->data;
@@ -137,6 +141,8 @@ class View implements \Stringable {
 
 	/**
 	 * Retrieve the cache key to use for the view.
+	 *
+	 * @return string
 	 */
 	public function get_cache_key(): string {
 		if ( ! empty( $this->cache_key ) ) {
@@ -210,6 +216,8 @@ class View implements \Stringable {
 
 	/**
 	 * Get the string contents of the view.
+	 *
+	 * @return string
 	 */
 	public function render(): string {
 		// Check the cache for the view.
@@ -247,8 +255,10 @@ class View implements \Stringable {
 
 	/**
 	 * Get the string contents of the view.
+	 *
+	 * @return string
 	 */
-	public function __toString(): string {
+	public function __toString() {
 		return $this->render();
 	}
 }
