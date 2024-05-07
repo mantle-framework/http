@@ -89,7 +89,7 @@ class View_Finder {
 	/**
 	 * Set the default paths to load from for WordPress sites.
 	 */
-	public function set_default_paths(): void {
+	public function set_default_paths() {
 		if ( function_exists( 'get_stylesheet_directory' ) ) {
 			$this->add_path( get_stylesheet_directory(), 'stylesheet-path' );
 			$this->add_path( get_template_directory(), 'template-path' );
@@ -152,6 +152,8 @@ class View_Finder {
 
 	/**
 	 * Get the registered paths.
+	 *
+	 * @return array
 	 */
 	public function get_paths(): array {
 		return array_unique( $this->paths );
@@ -181,7 +183,7 @@ class View_Finder {
 		$alias = null;
 
 		// Extract the alias if passed.
-		if ( str_starts_with( $slug, '@' ) ) {
+		if ( 0 === strpos( $slug, '@' ) ) {
 			$alias = substr( Str::before( $slug, '/' ), 1 );
 			$slug  = Str::after( $slug, '/' );
 		}
@@ -214,7 +216,9 @@ class View_Finder {
 		if ( $alias ) {
 			$paths = array_filter(
 				$paths,
-				fn ( $path_alias) => $alias === $path_alias,
+				function( $path_alias ) use ( $alias ) {
+					return $alias === $path_alias;
+				},
 				ARRAY_FILTER_USE_KEY
 			);
 		}
@@ -222,9 +226,9 @@ class View_Finder {
 		foreach ( $templates as $template ) {
 			$possible_view_files = $this->get_possible_view_files( $template );
 
-			foreach ( $possible_view_files as $possible_view_file ) {
+			foreach ( $possible_view_files as $view_file ) {
 				foreach ( $this->get_paths() as $path ) {
-					$path = "{$path}/{$possible_view_file}";
+					$path = "{$path}/{$view_file}";
 
 					if ( file_exists( $path ) ) {
 						return $path;
@@ -244,7 +248,9 @@ class View_Finder {
 	 */
 	public function get_possible_view_files( string $name ): array {
 		return array_map(
-			fn ( $extension) => "{$name}.{$extension}",
+			function ( $extension ) use ( $name ) {
+				return "{$name}.{$extension}";
+			},
 			$this->extensions
 		);
 	}

@@ -57,8 +57,9 @@ class Middleware_Name_Resolver {
 	 * @param  string $name
 	 * @param  array  $map
 	 * @param  array  $middleware_groups
+	 * @return array
 	 */
-	protected static function parse_middleware_group( $name, $map, $middleware_groups ): array {
+	protected static function parse_middleware_group( $name, $map, $middleware_groups ) {
 		$results = [];
 
 		foreach ( $middleware_groups[ $name ] as $middleware ) {
@@ -79,7 +80,7 @@ class Middleware_Name_Resolver {
 			}
 
 			[ $middleware, $parameters ] = array_pad(
-				explode( ':', (string) $middleware, 2 ),
+				explode( ':', $middleware, 2 ),
 				2,
 				null
 			);

@@ -32,16 +32,22 @@ class Url_Generator extends UrlGenerator implements Generator_Contract {
 
 	/**
 	 * The forced scheme for URLs.
+	 *
+	 * @var string|null
 	 */
 	protected ?string $force_scheme = null;
 
 	/**
 	 * A cached copy of the URL root for the current request.
+	 *
+	 * @var string|null
 	 */
-	protected ?string $cached_root = null;
+	protected ?string $cached_root;
 
 	/**
 	 * A cached copy of the URL scheme for the current request.
+	 *
+	 * @var string|null
 	 */
 	protected ?string $cached_scheme = null;
 
@@ -73,7 +79,7 @@ class Url_Generator extends UrlGenerator implements Generator_Contract {
 
 		// Set the host for the request context if it is not already set.
 		if ( empty( $this->context->getHost() ) ) {
-			$this->context->setHost( (string) parse_url( $this->root_url, PHP_URL_HOST ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url
+			$this->context->setHost( (string) parse_url( (string) $this->root_url, PHP_URL_HOST ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url
 		}
 
 		if ( ! $this->context->hasParameter( '_locale' ) ) {
@@ -85,6 +91,8 @@ class Url_Generator extends UrlGenerator implements Generator_Contract {
 
 	/**
 	 * Get the request object.
+	 *
+	 * @return Request
 	 */
 	public function get_request(): Request {
 		return $this->request;
@@ -103,6 +111,7 @@ class Url_Generator extends UrlGenerator implements Generator_Contract {
 	 * Get the URL for the previous request.
 	 *
 	 * @param string $fallback Fallback value, optional.
+	 * @return string
 	 */
 	public function previous( string $fallback = null ): string {
 		return $this->to(
@@ -131,7 +140,7 @@ class Url_Generator extends UrlGenerator implements Generator_Contract {
 			'/',
 			array_map(
 				'rawurlencode',
-				$this->format_parameters( $extra_params )
+				(array) $this->format_parameters( $extra_params )
 			)
 		);
 
@@ -165,6 +174,7 @@ class Url_Generator extends UrlGenerator implements Generator_Contract {
 	 * @param string $name Route name.
 	 * @param array  $parameters Route parameters.
 	 * @param bool   $absolute Flag if should be absolute.
+	 * @return string
 	 *
 	 * @throws \Symfony\Component\Routing\Exception\RouteNotFoundException If route not found.
 	 */
@@ -180,6 +190,7 @@ class Url_Generator extends UrlGenerator implements Generator_Contract {
 	 * Format the array of URL parameters.
 	 *
 	 * @param  mixed|array $parameters
+	 * @return array
 	 */
 	public function format_parameters( $parameters ): array {
 		$parameters = Arr::wrap( $parameters );
@@ -197,6 +208,7 @@ class Url_Generator extends UrlGenerator implements Generator_Contract {
 	 * Get the default scheme for a raw URL.
 	 *
 	 * @param  bool|null $secure Flag if should be secure.
+	 * @return string
 	 */
 	public function format_scheme( $secure = null ): string {
 		if ( ! is_null( $secure ) ) {
@@ -230,6 +242,8 @@ class Url_Generator extends UrlGenerator implements Generator_Contract {
 
 	/**
 	 * Get the root URL.
+	 *
+	 * @return string
 	 */
 	public function get_root_url(): string {
 		return $this->root_url;
@@ -256,6 +270,7 @@ class Url_Generator extends UrlGenerator implements Generator_Contract {
 	 *
 	 * @param  string      $scheme
 	 * @param  string|null $root
+	 * @return string
 	 */
 	public function format_root( string $scheme, ?string $root = null ): string {
 		if ( is_null( $root ) ) {
@@ -274,6 +289,7 @@ class Url_Generator extends UrlGenerator implements Generator_Contract {
 	 *
 	 * @param  string $root URL root.
 	 * @param  string $path URL path.
+	 * @return string
 	 */
 	public function format( string $root, string $path ): string {
 		return trim( rtrim( $root, '/' ) . '/' . ltrim( $path, '/' ) );
@@ -283,6 +299,7 @@ class Url_Generator extends UrlGenerator implements Generator_Contract {
 	 * Determine if the given path is a valid URL.
 	 *
 	 * @param  string $path
+	 * @return bool
 	 */
 	public function is_valid_url( $path ): bool {
 		if ( ! preg_match( '~^(#|//|https?://|(mailto|tel|sms):)~', $path ) ) {
@@ -296,6 +313,7 @@ class Url_Generator extends UrlGenerator implements Generator_Contract {
 	 * Force the scheme for URLs.
 	 *
 	 * @param  string $scheme
+	 * @return void
 	 */
 	public function force_scheme( string $scheme ): void {
 		$this->cached_scheme = null;

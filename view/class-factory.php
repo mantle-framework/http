@@ -68,7 +68,7 @@ class Factory implements ViewFactory {
 	 *
 	 * @var View|null
 	 */
-	protected $current;
+	protected $current = null;
 
 	/**
 	 * The extension to engine bindings.
@@ -109,6 +109,8 @@ class Factory implements ViewFactory {
 
 	/**
 	 * Get the container to use.
+	 *
+	 * @return Container
 	 */
 	public function get_container(): Container {
 		return $this->container;
@@ -116,6 +118,8 @@ class Factory implements ViewFactory {
 
 	/**
 	 * Get the current view.
+	 *
+	 * @return View|null
 	 */
 	public function get_current(): ?View {
 		return $this->current;
@@ -151,6 +155,8 @@ class Factory implements ViewFactory {
 
 	/**
 	 * Get all of the shared data for the environment.
+	 *
+	 * @return array
 	 */
 	public function get_shared(): array {
 		return $this->shared;
@@ -209,6 +215,7 @@ class Factory implements ViewFactory {
 	 * @param array|string $name View name, optional. Supports passing variables in if
 	 *                           $variables is not used.
 	 * @param array        $variables Variables for the view, optional.
+	 * @return View
 	 */
 	public function make( string $slug, $name = null, array $variables = [] ): View {
 		if ( is_array( $name ) ) {
@@ -268,6 +275,7 @@ class Factory implements ViewFactory {
 	 * @param array|string       $name View name, optional. Supports passing variables in if
 	 *                                 $variables is not used.
 	 * @param array              $variables Variables for the view, optional.
+	 * @return Collection
 	 */
 	public function loop( $data, string $slug, $name = null, array $variables = [] ): Collection {
 		$results = new Collection();
@@ -297,6 +305,7 @@ class Factory implements ViewFactory {
 	 * @param array|string       $name View name, optional. Supports passing variables in if
 	 *                                 $variables is not used.
 	 * @param array              $variables Variables for the view, optional.
+	 * @return Collection
 	 */
 	public function iterate( $data, string $slug, $name = null, array $variables = [] ): Collection {
 		if ( is_array( $name ) ) {
@@ -338,13 +347,16 @@ class Factory implements ViewFactory {
 	 * Get the extension used by the view file.
 	 *
 	 * @param  string $path Path to check against.
+	 * @return string|null
 	 */
 	protected function get_extension( string $path ): ?string {
 		$extensions = array_keys( $this->extensions );
 
 		return Arr::first(
 			$extensions,
-			fn ( $value) => Str::ends_with( $path, '.' . $value )
+			function ( $value ) use ( $path ) {
+				return Str::ends_with( $path, '.' . $value );
+			}
 		);
 	}
 }

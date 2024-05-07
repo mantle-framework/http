@@ -60,7 +60,7 @@ class Rest_Route_Registrar {
 	 * @param string         $route Route to register.
 	 * @param array|callable $args Arguments or callback for the route.
 	 */
-	public function register_route( string $route, $args = [] ): void {
+	public function register_route( string $route, $args = [] ) {
 		$args = $this->normalize_args( $args, $route );
 
 		if ( $this->should_register_now() ) {
@@ -75,6 +75,7 @@ class Rest_Route_Registrar {
 	 *
 	 * @param array|callable $args Arguments for the route or callback function.
 	 * @param string         $route Route name.
+	 * @return array
 	 */
 	protected function normalize_args( $args, string $route ): array {
 		if ( ! is_array( $args ) ) {
@@ -101,6 +102,7 @@ class Rest_Route_Registrar {
 	 *
 	 * @param mixed  $callback Callback to invoke.
 	 * @param string $route Route name.
+	 * @return callable
 	 */
 	protected function wrap_callback( mixed $callback, string $route ): callable {
 		$callback = $this->parse_route_action( $callback, $route );
@@ -139,15 +141,18 @@ class Rest_Route_Registrar {
 	 * Gather the middleware for the given route with resolved class names.
 	 *
 	 * @param string[] $middleware Middleware for the route.
+	 * @return array
 	 */
 	public function gather_route_middleware( array $middleware ): array {
 		return collect( $middleware )
 			->map(
-				fn ( $name) => (array) Middleware_Name_Resolver::resolve(
-					$name,
-					$this->router->get_middleware(),
-					$this->router->get_middleware_groups()
-				)
+				function ( $name ) {
+					return (array) Middleware_Name_Resolver::resolve(
+						$name,
+						$this->router->get_middleware(),
+						$this->router->get_middleware_groups()
+					);
+				}
 			)
 			->flatten()
 			->values()
@@ -157,7 +162,7 @@ class Rest_Route_Registrar {
 	/**
 	 * Register the queued routes.
 	 */
-	public function register_routes(): void {
+	public function register_routes() {
 		if ( empty( $this->routes ) ) {
 			return;
 		}
@@ -172,6 +177,8 @@ class Rest_Route_Registrar {
 	/**
 	 * Determine if the routes should be registered now because `rest_api_init`
 	 * was already fired.
+	 *
+	 * @return bool
 	 */
 	protected function should_register_now(): bool {
 		return ! ! did_action( 'rest_api_init' );
@@ -186,6 +193,7 @@ class Rest_Route_Registrar {
 	 *
 	 * @param mixed  $action Route action.
 	 * @param string $route Route path.
+	 * @return callable
 	 */
 	protected function parse_route_action( mixed $action, string $route ): callable {
 		if ( is_callable( $action ) ) {
