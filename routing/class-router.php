@@ -40,41 +40,60 @@ class Router implements Router_Contract {
 	}
 
 	/**
+	 * Events instance.
+	 *
+	 * @var Dispatcher
+	 */
+	protected Dispatcher $events;
+
+	/**
+	 * Container instance.
+	 *
+	 * @var Container
+	 */
+	protected Container $container;
+
+	/**
 	 * Route Collection
+	 *
+	 * @var RouteCollection
 	 */
 	protected RouteCollection $routes;
 
 	/**
 	 * All of the short-hand keys for middlewares.
+	 *
+	 * @var array
 	 */
 	protected array $middleware = [];
 
 	/**
 	 * All of the middleware groups.
+	 *
+	 * @var array
 	 */
 	protected array $middleware_groups = [];
 
 	/**
 	 * The registered route value binders.
+	 *
+	 * @var array
 	 */
 	protected array $binders = [];
 
 	/**
 	 * REST Route Registrar
+	 *
+	 * @var Rest_Route_Registrar|null
 	 */
 	protected ?Rest_Route_Registrar $rest_registrar = null;
 
 	/**
 	 * Data Object Router
+	 *
+	 * @var Entity_Router
 	 */
 	protected Entity_Router $model_router;
-
-	/**
-	 * Flag or callback to determine if requests should pass through to WordPress.
-	 *
-	 * @var bool|callable
-	 */
-	protected mixed $pass_requests_to_wordpress = true;
 
 	/**
 	 * Constructor.
@@ -82,7 +101,10 @@ class Router implements Router_Contract {
 	 * @param Dispatcher $events Events dispatcher.
 	 * @param Container  $container Container instance.
 	 */
-	public function __construct( protected Dispatcher $events, protected Container $container ) {
+	public function __construct( Dispatcher $events, Container $container ) {
+		$this->events    = $events;
+		$this->container = $container;
+
 		$this->routes = new RouteCollection();
 	}
 
@@ -168,7 +190,7 @@ class Router implements Router_Contract {
 	 * @param  \Closure|string $routes
 	 * @return void
 	 */
-	protected function load_routes( \Closure|string $routes ) {
+	protected function load_routes( $routes ) {
 		if ( $routes instanceof \Closure ) {
 			$routes( $this );
 		} else {
@@ -205,6 +227,7 @@ class Router implements Router_Contract {
 	 * @param array  $methods Methods to register.
 	 * @param string $uri URL route.
 	 * @param mixed  $action Route callback.
+	 * @return Route
 	 */
 	protected function create_route( array $methods, string $uri, $action ): Route {
 		$route = new Route( $methods, $this->prefix( $uri ), $action );
@@ -224,6 +247,7 @@ class Router implements Router_Contract {
 	 * @param array  $methods Methods to register.
 	 * @param string $uri URL route.
 	 * @param mixed  $action Route callback.
+	 * @return void
 	 */
 	protected function create_rest_api_route( array $methods, string $uri, $action ): void {
 		$args = [
@@ -250,6 +274,8 @@ class Router implements Router_Contract {
 
 	/**
 	 * Get registered routes.
+	 *
+	 * @return RouteCollection
 	 */
 	public function get_routes(): RouteCollection {
 		return $this->routes;
@@ -257,6 +283,8 @@ class Router implements Router_Contract {
 
 	/**
 	 * Retrieve the container/application instance.
+	 *
+	 * @return Container
 	 */
 	public function get_container(): Container {
 		return $this->container;
@@ -266,6 +294,7 @@ class Router implements Router_Contract {
 	 * Dispatch a request to the registered routes.
 	 *
 	 * @param Request $request Request object.
+	 * @return Symfony_Response|null
 	 */
 	public function dispatch( Request $request ): ?Symfony_Response {
 		return $this->execute_route_match(
@@ -278,6 +307,7 @@ class Router implements Router_Contract {
 	 * Match a request to a registered route.
 	 *
 	 * @param Request $request Request object.
+	 * @return array|null
 	 */
 	protected function match_route( Request $request ): ?array {
 		$context = ( new RequestContext() )->fromRequest( $request );
@@ -290,6 +320,7 @@ class Router implements Router_Contract {
 	 *
 	 * @param array   $match Route match.
 	 * @param Request $request Request object.
+	 * @return Symfony_Response|null
 	 *
 	 * @throws HttpException Thrown on unknown route callback.
 	 */
@@ -315,7 +346,7 @@ class Router implements Router_Contract {
 			->send( $this->container['request'] )
 			->through( $middleware )
 			->then(
-				function ( Request $request ) use ( $route ) {
+				function( Request $request ) use ( $route ) {
 					// Refresh the request object in the container with modifications from the middleware.
 					$this->container['request'] = $request;
 
@@ -332,6 +363,7 @@ class Router implements Router_Contract {
 	 *
 	 * @param Request $request
 	 * @param mixed   $response
+	 * @return \Symfony\Component\HttpFoundation\Response
 	 */
 	public static function to_response( Request $request, mixed $response ): \Symfony\Component\HttpFoundation\Response {
 		$response = Route::ensure_response( $response );
@@ -353,8 +385,9 @@ class Router implements Router_Contract {
 	 *
 	 * @param  string $name
 	 * @param  string $class
+	 * @return static
 	 */
-	public function alias_middleware( string $name, string $class ): static {
+	public function alias_middleware( $name, $class ) {
 		$this->middleware[ $name ] = $class;
 
 		return $this;
@@ -374,8 +407,9 @@ class Router implements Router_Contract {
 	 *
 	 * @param  string $name
 	 * @param  array  $middleware
+	 * @return static
 	 */
-	public function middleware_group( string $name, array $middleware ): static {
+	public function middleware_group( $name, array $middleware ) {
 		$this->middleware_groups[ $name ] = $middleware;
 
 		return $this;
@@ -391,7 +425,7 @@ class Router implements Router_Contract {
 	 * @return static
 	 */
 	public function prepend_middleware_to_group( $group, $middleware ) {
-		if ( isset( $this->middleware_groups[ $group ] ) && ! in_array( $middleware, $this->middleware_groups[ $group ], true ) ) {
+		if ( isset( $this->middleware_groups[ $group ] ) && ! in_array( $middleware, $this->middleware_groups[ $group ] ) ) {
 			array_unshift( $this->middleware_groups[ $group ], $middleware );
 		}
 
@@ -412,7 +446,7 @@ class Router implements Router_Contract {
 				$this->middleware_groups[ $group ] = [];
 		}
 
-		if ( ! in_array( $middleware, $this->middleware_groups[ $group ], true ) ) {
+		if ( ! in_array( $middleware, $this->middleware_groups[ $group ] ) ) {
 				$this->middleware_groups[ $group ][] = $middleware;
 		}
 
@@ -423,15 +457,9 @@ class Router implements Router_Contract {
 	 * Gather the middleware for the given route with resolved class names.
 	 *
 	 * @param Route $route Route instance.
+	 * @return array
 	 */
 	public function gather_route_middleware( Route $route ): array {
-		$middleware = $route->excluded_middleware();
-
-		// If the route has a wildcard, we will just skip the middleware gathering.
-		if ( in_array( '*', $middleware, true ) ) {
-			return [];
-		}
-
 		$excluded = collect( $route->excluded_middleware() )
 			->map(
 				fn ( $name ) => Middleware_Name_Resolver::resolve( $name, $this->middleware, $this->middleware_groups ),
@@ -475,6 +503,7 @@ class Router implements Router_Contract {
 	 *
 	 * @param string          $key
 	 * @param string|callable $binder
+	 * @return void
 	 */
 	public function bind( string $key, $binder ): void {
 		$this->binders[ str_replace( '-', '_', $key ) ] = Route_Binding::for_callback(
@@ -489,8 +518,9 @@ class Router implements Router_Contract {
 	 * @param string        $key
 	 * @param string        $class
 	 * @param \Closure|null $callback
+	 * @return void
 	 */
-	public function bind_model( $key, $class, ?Closure $callback = null ): void {
+	public function bind_model( $key, $class, Closure $callback = null ): void {
 		$this->bind( $key, Route_Binding::for_model( $this->container, $class, $callback ) );
 	}
 
@@ -499,7 +529,7 @@ class Router implements Router_Contract {
 	 *
 	 * @param Request $request Request object.
 	 */
-	public function substitute_bindings( Request $request ): void {
+	public function substitute_bindings( Request $request ) {
 		foreach ( $request->get_route_parameters() as $key => $value ) {
 			if ( ! isset( $this->binders[ $key ] ) ) {
 				continue;
@@ -526,7 +556,7 @@ class Router implements Router_Contract {
 	 *
 	 * @param Request $request Request instance.
 	 */
-	public function substitute_implicit_bindings( Request $request ): void {
+	public function substitute_implicit_bindings( Request $request ) {
 		Implicit_Route_Binding::resolve_for_route( $this->container, $request );
 	}
 
@@ -572,6 +602,7 @@ class Router implements Router_Contract {
 	 *
 	 * @param string $model Model class name.
 	 * @param string $controller Controller class name.
+	 * @return void
 	 */
 	public function model( string $model, string $controller ): void {
 		$this->container->make( Entity_Router::class )->add( $this, $model, $controller );
@@ -600,7 +631,7 @@ class Router implements Router_Contract {
 	/**
 	 * Sync the routes to the URL generator.
 	 */
-	public function sync_routes_to_url_generator(): void {
+	public function sync_routes_to_url_generator() {
 		$this->container['url']->set_routes( $this->routes );
 	}
 
@@ -609,6 +640,7 @@ class Router implements Router_Contract {
 	 *
 	 * @param string $old_name Old route name.
 	 * @param string $new_name New route name.
+	 * @return static
 	 *
 	 * @throws \InvalidArgumentException Thrown when attempting to rename a route
 	 *                                  a name that is already taken.
@@ -630,36 +662,5 @@ class Router implements Router_Contract {
 		$this->routes->remove( $old_name );
 
 		return $this;
-	}
-
-	/**
-	 * Determine if the request should pass through to WordPress.
-	 *
-	 * @param (callable(\Mantle\Http\Request): bool)|bool $callback Callback to determine if the request should pass through to WordPress.
-	 */
-	public function pass_requests_to_wordpress( $callback ): static {
-		$this->pass_requests_to_wordpress = $callback;
-
-		return $this;
-	}
-
-	/**
-	 * Determine if the request should pass through to WordPress.
-	 *
-	 * @param Request $request Request object.
-	 */
-	public function should_pass_through_request( Request $request ): bool {
-		// Early checks to always allow the REST API and prevent routing when not using themes.
-		if ( str_starts_with( $request->path(), 'wp-json' ) ) {
-			return true;
-		}
-
-		if ( ! wp_using_themes() ) {
-			return true;
-		}
-
-		$status = $this->pass_requests_to_wordpress;
-
-		return is_callable( $status ) ? (bool) $status( $request ) : $status;
 	}
 }

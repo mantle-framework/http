@@ -104,8 +104,9 @@ if ( ! function_exists( 'render_view' ) ) {
 	 * @param string       $slug View slug.
 	 * @param array|string $name View name, optional. Supports passing variables in if
 	 *                           $variables is not used.
+	 * @return void
 	 */
-	function render_view( ...$args ): void {
+	function render_view( ...$args ) {
 		echo view( ...$args ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 }
@@ -116,7 +117,7 @@ if ( ! function_exists( 'render_main_template' ) ) {
 	 *
 	 * The contents of the '_mantle_contents' variable are assumed to be pre-sanitized.
 	 */
-	function render_main_template(): void {
+	function render_main_template() {
 		echo mantle_get_var( '_mantle_contents' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 }
@@ -147,6 +148,7 @@ if ( ! function_exists( 'render_loop' ) ) {
 	 * @param string           $slug View slug.
 	 * @param array|string     $name View name, optional. Supports passing variables in if
 	 *                           $variables is not used.
+	 * @return void
 	 */
 	function render_loop( ...$args ): void {
 		echo loop( ...$args ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
@@ -180,6 +182,7 @@ if ( ! function_exists( 'render_iterate' ) ) {
 	 * @param string           $slug View slug.
 	 * @param array|string     $name View name, optional. Supports passing variables in if
 	 *                           $variables is not used.
+	 * @return void
 	 */
 	function render_iterate( ...$args ): void {
 		echo iterate( ...$args ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
@@ -220,7 +223,7 @@ if ( ! function_exists( 'abort' ) ) {
 	 * @param  string $message Response message
 	 * @param  array  $headers HTTP Headers
 	 */
-	function abort( $code, $message = '', array $headers = [] ): void {
+	function abort( $code, $message = '', array $headers = [] ) {
 		app()->abort( $code, $message, $headers );
 	}
 }
@@ -234,7 +237,7 @@ if ( ! function_exists( 'abort_if' ) ) {
 	 * @param  string  $message Response message
 	 * @param  array  $headers HTTP Headers
 	 */
-	function abort_if( $boolean, $code, $message = '', array $headers = [] ): void {
+	function abort_if( $boolean, $code, $message = '', array $headers = [] ) {
 		if ( $boolean ) {
 			abort( $code, $message, $headers );
 		}
@@ -250,7 +253,7 @@ if ( ! function_exists( 'abort_unless' ) ) {
 	 * @param  string  $message Response message
 	 * @param  array  $headers HTTP Headers
 	 */
-	function abort_unless( $boolean, $code, $message = '', array $headers = [] ): void {
+	function abort_unless( $boolean, $code, $message = '', array $headers = [] ) {
 		if ( ! $boolean ) {
 			abort( $code, $message, $headers );
 		}

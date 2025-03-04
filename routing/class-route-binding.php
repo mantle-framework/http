@@ -57,8 +57,11 @@ class Route_Binding {
 	 * @param  Container     $container Container instance.
 	 * @param  string        $class Class name.
 	 * @param  \Closure|null $callback Callback for binding.
+	 * @return \Closure
+	 *
+	 * @throws Model_Not_Found_Exception Thrown on missing model.
 	 */
-	public static function for_model( Container $container, string $class, ?Closure $callback = null ): Closure {
+	public static function for_model( Container $container, $class, $callback = null ) {
 		return function ( $value ) use ( $container, $class, $callback ) {
 			if ( is_null( $value ) ) {
 				return;
@@ -81,7 +84,7 @@ class Route_Binding {
 				return $callback( $value );
 			}
 
-			throw new Model_Not_Found_Exception( $class, [ $value ] );
+			throw ( new Model_Not_Found_Exception() )->set_model( $class );
 		};
 	}
 }

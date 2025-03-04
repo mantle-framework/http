@@ -29,7 +29,7 @@ class Implicit_Route_Binding {
 	 *
 	 * @throws Model_Not_Found_Exception Thrown on missing model.
 	 */
-	public static function resolve_for_route( Container $container, Request $request ): void {
+	public static function resolve_for_route( Container $container, Request $request ) {
 		$route      = $request->get_route();
 		$parameters = $request->get_route_parameters()->all();
 
@@ -49,7 +49,7 @@ class Implicit_Route_Binding {
 			$model    = $instance->resolve_route_binding( $parameter_value );
 
 			if ( ! $model ) {
-				throw new Model_Not_Found_Exception( $instance::class, [ $parameter_value ] );
+				throw ( new Model_Not_Found_Exception() )->set_model( get_class( $instance ), [ $parameter_value ] );
 			}
 
 			$request->set_route_parameter( $parameter_name, $model );

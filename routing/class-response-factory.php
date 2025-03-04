@@ -196,6 +196,7 @@ class Response_Factory implements Factory_Contract {
 	 * @param  int       $status
 	 * @param  array     $headers
 	 * @param  bool|null $secure
+	 * @return RedirectResponse
 	 */
 	public function redirect_to( $path, $status = 302, $headers = [], $secure = null ): RedirectResponse {
 		return $this->redirector->to( $path, $status, $headers, $secure );
@@ -208,6 +209,7 @@ class Response_Factory implements Factory_Contract {
 	 * @param  mixed  $parameters
 	 * @param  int    $status
 	 * @param  array  $headers
+	 * @return RedirectResponse
 	 */
 	public function redirect_to_route( $route, $parameters = [], $status = 302, $headers = [] ): RedirectResponse {
 		return $this->redirector->route( $route, $parameters, $status, $headers );

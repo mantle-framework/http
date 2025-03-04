@@ -19,7 +19,6 @@ use Mantle\Support\Arr;
 use Mantle\Support\Str;
 use ReflectionFunction;
 use Mantle\Http\Response;
-use Mantle\Http\Routing\Middleware\Wrap_Template;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Route as Symfony_Route;
 use Symfony\Component\HttpFoundation\Response as Symfony_Response;
@@ -41,16 +40,22 @@ class Route extends Symfony_Route {
 
 	/**
 	 * Route action.
+	 *
+	 * @var array
 	 */
 	protected array $action;
 
 	/**
 	 * Container instance.
+	 *
+	 * @var Container
 	 */
 	protected Container $container;
 
 	/**
 	 * Router instance.
+	 *
+	 * @var Router|null
 	 */
 	protected ?Router $router = null;
 
@@ -58,6 +63,7 @@ class Route extends Symfony_Route {
 	 * Get the route object from a Symfony route match.
 	 *
 	 * @param array $match Route match.
+	 * @return Route|null
 	 */
 	public static function get_route_from_match( array $match ): ?Route {
 		if ( ! empty( $match[ static::ROUTE_OBJECT_KEY ] ) && $match[ static::ROUTE_OBJECT_KEY ] instanceof Route ) {
@@ -88,7 +94,7 @@ class Route extends Symfony_Route {
 				'callback' => $action,
 			];
 		} elseif (
-			is_array( $action ) // @phpstan-ignore-line function.alreadyNarrowedType
+			is_array( $action )
 			&& ! empty( $action[0] )
 			&& ! empty( $action[1] )
 			&& is_string( $action[0] )
@@ -123,6 +129,8 @@ class Route extends Symfony_Route {
 
 	/**
 	 * Get the route's name.
+	 *
+	 * @return string
 	 */
 	public function get_name(): string {
 		if ( ! empty( $this->action['as'] ) ) {
@@ -165,7 +173,7 @@ class Route extends Symfony_Route {
 	 * @param string|null $key Key to get.
 	 * @return mixed
 	 */
-	public function get_action( ?string $key = null ) {
+	public function get_action( string $key = null ) {
 		return Arr::get( $this->action, $key );
 	}
 
@@ -201,6 +209,8 @@ class Route extends Symfony_Route {
 
 	/**
 	 * Retrieve the middleware that should be excluded from the route.
+	 *
+	 * @return array
 	 */
 	public function excluded_middleware(): array {
 		return (array) ( $this->action['excluded_middleware'] ?? [] );
@@ -209,9 +219,10 @@ class Route extends Symfony_Route {
 	/**
 	 * Exclude middleware from the route.
 	 *
-	 * @param  array|string $middleware Middleware to exclude, optional.
+	 * @param  array|string|null $middleware Middleware to exclude, optional.
+	 * @return static
 	 */
-	public function without_middleware( array|string $middleware = '*' ): static {
+	public function without_middleware( $middleware = null ): static {
 		$this->action['excluded_middleware'] = array_merge(
 			(array) ( $this->action['excluded_middleware'] ?? [] ),
 			Arr::wrap( $middleware ),
@@ -221,16 +232,10 @@ class Route extends Symfony_Route {
 	}
 
 	/**
-	 * Exclude the wrap template middleware from the route.
-	 */
-	public function without_wrap_template(): static {
-		return $this->without_middleware( Wrap_Template::class );
-	}
-
-	/**
 	 * Set a callback for a route.
 	 *
 	 * @param callable $callback Callback to invoke.
+	 * @return static
 	 */
 	public function callback( callable $callback ): static {
 		$this->action['callback'] = $callback;
@@ -244,6 +249,7 @@ class Route extends Symfony_Route {
 	 * @todo Add route parameters from the request (pass :slug down to the route).
 	 *
 	 * @param Container $container Service Container.
+	 * @return Symfony_Response|null
 	 */
 	public function run( Container $container ): ?Symfony_Response {
 		$this->container = $container;
@@ -264,6 +270,8 @@ class Route extends Symfony_Route {
 
 	/**
 	 * Retrieve the route's callback name.
+	 *
+	 * @return string
 	 */
 	public function get_callback_name(): string {
 		if ( $this->has_controller_callback() ) {
@@ -280,6 +288,8 @@ class Route extends Symfony_Route {
 
 	/**
 	 * Determine if the route has a closure callback.
+	 *
+	 * @return bool
 	 */
 	protected function has_callback(): bool {
 		return ! empty( $this->action['callback'] ) && is_callable( $this->action['callback'] );
@@ -287,6 +297,8 @@ class Route extends Symfony_Route {
 
 	/**
 	 * Determine if the route has a controller callback.
+	 *
+	 * @return bool
 	 */
 	protected function has_controller_callback(): bool {
 		if ( empty( $this->action['callback'] ) ) {
@@ -317,6 +329,8 @@ class Route extends Symfony_Route {
 
 	/**
 	 * Get the controller name used for the route.
+	 *
+	 * @return string
 	 */
 	protected function get_controller_name(): string {
 		return $this->parse_controller_callback()[0] ?? '';
@@ -324,6 +338,8 @@ class Route extends Symfony_Route {
 
 	/**
 	 * Get the controller method used for the route.
+	 *
+	 * @return string
 	 */
 	protected function get_controller_method(): string {
 		return $this->parse_controller_callback()[1] ?? '';
@@ -344,6 +360,8 @@ class Route extends Symfony_Route {
 
 	/**
 	 * Get the controller's closure callback.
+	 *
+	 * @return callable:null
 	 */
 	protected function get_callback(): ?callable {
 		return $this->has_callback() ? $this->action['callback'] : null;
@@ -396,6 +414,7 @@ class Route extends Symfony_Route {
 	 * @todo Move this to the Router class.
 	 *
 	 * @param mixed $response Response to send.
+	 * @return Symfony_Response
 	 */
 	public static function ensure_response( $response ): Symfony_Response {
 		if ( $response instanceof Response || $response instanceof Symfony_Response ) {
@@ -418,6 +437,8 @@ class Route extends Symfony_Route {
 
 	/**
 	 * Get the route parameters.
+	 *
+	 * @return array
 	 */
 	public function get_request_parameters(): array {
 		return $this->container['request']->get_route_parameters()->all();
@@ -429,7 +450,7 @@ class Route extends Symfony_Route {
 	 * @param string|null $sub_class Subclass to verify the parameter is an instance of.
 	 * @return array
 	 */
-	public function get_signature_parameters( ?string $sub_class = null ) {
+	public function get_signature_parameters( string $sub_class = null ) {
 		return Route_Signature_Parameters::from_action( $this->action, $sub_class );
 	}
 
@@ -437,6 +458,7 @@ class Route extends Symfony_Route {
 	 * Make an action for an invokable controller.
 	 *
 	 * @param string $action
+	 * @return string
 	 *
 	 * @throws \UnexpectedValueException Thrown on missing method.
 	 */

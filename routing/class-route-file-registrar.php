@@ -33,8 +33,8 @@ class Route_File_Registrar {
 	 *
 	 * @param  string $routes Routes to register.
 	 */
-	public function register( string $routes ): void {
+	public function register( $routes ) {
 		$router = $this->router;
-		require $routes; // phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingVariable
+		require $routes;
 	}
 }
