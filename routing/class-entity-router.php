@@ -60,7 +60,6 @@ class Entity_Router implements Entity_Router_Contract {
 	 * @param Router_Contract $router Router instance.
 	 * @param string          $entity Entity class name.
 	 * @param string          $controller Controller class name.
-	 * @return void
 	 *
 	 * @throws InvalidArgumentException Thrown on invalid entity.
 	 */
@@ -69,7 +68,7 @@ class Entity_Router implements Entity_Router_Contract {
 			throw new InvalidArgumentException( "Unknown entity type: [{$entity}]" );
 		}
 
-		if ( ! in_array( Url_Routable::class, class_implements( $entity ) ) ) {
+		if ( ! in_array( Url_Routable::class, class_implements( $entity ), true ) ) {
 			throw new InvalidArgumentException( "Unroutable entity: [{$entity}]" );
 		}
 
@@ -82,7 +81,6 @@ class Entity_Router implements Entity_Router_Contract {
 	 * Handle the route match for entity routes.
 	 *
 	 * @param Route_Matched $event Event instance.
-	 * @return void
 	 */
 	protected function handle_route_matched( Route_Matched $event ): void {
 		global $wp_query;
@@ -134,7 +132,6 @@ class Entity_Router implements Entity_Router_Contract {
 	 * @todo Add support for other non-post/term queried objects such as post types.
 	 *
 	 * @param Bindings_Substituted $event Event instance.
-	 * @return void
 	 */
 	protected function handle_bindings_substituted( Bindings_Substituted $event ): void {
 		global $wp_query, $post;
@@ -181,7 +178,6 @@ class Entity_Router implements Entity_Router_Contract {
 	 * @param Router_Contract $router Router instance.
 	 * @param string          $entity Entity class name.
 	 * @param string          $controller Controller class name.
-	 * @return void
 	 */
 	protected static function resolve_entity_endpoints( Router_Contract $router, string $entity, string $controller ): void {
 		// Singular endpoint.

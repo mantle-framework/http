@@ -47,7 +47,6 @@ trait Interacts_With_Input {
 	 *
 	 * @param  string|null       $key
 	 * @param  string|array|null $default
-	 * @return string|array|null
 	 */
 	public function header( $key = null, $default = null ): string|array|null {
 		return $this->retrieve_item( 'headers', $key, $default );
@@ -55,8 +54,6 @@ trait Interacts_With_Input {
 
 	/**
 	 * Get the bearer token from the request headers.
-	 *
-	 * @return string|null
 	 */
 	public function bearer_token(): ?string {
 		$header = $this->header( 'Authorization', '' );
@@ -76,7 +73,6 @@ trait Interacts_With_Input {
 	 * Determine if the request contains a given input item key.
 	 *
 	 * @param  string|array $key
-	 * @return bool
 	 */
 	public function exists( $key ): bool {
 		return $this->has( $key );
@@ -86,15 +82,14 @@ trait Interacts_With_Input {
 	 * Determine if the request contains a given input item key.
 	 *
 	 * @param  string|array $key
-	 * @return bool
 	 */
-	public function has( $key ) {
+	public function has( $key ): bool {
 		$keys = is_array( $key ) ? $key : func_get_args();
 
 		$input = $this->all();
 
-		foreach ( $keys as $value ) {
-			if ( ! Arr::has( $input, $value ) ) {
+		foreach ( $keys as $key ) {
+			if ( ! Arr::has( $input, $key ) ) {
 				return false;
 			}
 		}
@@ -120,13 +115,12 @@ trait Interacts_With_Input {
 	 * Determine if the request contains a non-empty value for an input item.
 	 *
 	 * @param  string|array $key
-	 * @return bool
 	 */
-	public function filled( $key ) {
+	public function filled( $key ): bool {
 		$keys = is_array( $key ) ? $key : func_get_args();
 
-		foreach ( $keys as $value ) {
-			if ( $this->is_empty_string( $value ) ) {
+		foreach ( $keys as $key ) {
+			if ( $this->is_empty_string( $key ) ) {
 				return false;
 			}
 		}
@@ -138,9 +132,8 @@ trait Interacts_With_Input {
 	 * Determine if the request contains a non-empty value for any of the given inputs.
 	 *
 	 * @param  string|array $keys
-	 * @return bool
 	 */
-	public function any_filled( $keys ) {
+	public function any_filled( $keys ): bool {
 		$keys = is_array( $keys ) ? $keys : func_get_args();
 
 		foreach ( $keys as $key ) {
@@ -168,9 +161,8 @@ trait Interacts_With_Input {
 	 * Determine if the given input key is an empty string for "has".
 	 *
 	 * @param  string $key
-	 * @return bool
 	 */
-	protected function is_empty_string( $key ) {
+	protected function is_empty_string( $key ): bool {
 		$value = $this->input( $key );
 
 		return ! is_bool( $value ) && ! is_array( $value ) && trim( (string) $value ) === '';
@@ -239,9 +231,8 @@ trait Interacts_With_Input {
 	 * Get a subset containing the provided keys with values from the input data.
 	 *
 	 * @param  array|mixed $keys
-	 * @return array
 	 */
-	public function only( $keys ) {
+	public function only( $keys ): array {
 		$results = [];
 
 		$input = $this->all();
@@ -374,9 +365,8 @@ trait Interacts_With_Input {
 	 * Determine if the uploaded data contains a file.
 	 *
 	 * @param  string $key
-	 * @return bool
 	 */
-	public function has_file( $key ) {
+	public function has_file( $key ): bool {
 		$files = $this->file( $key );
 		if ( ! is_array( $files ) ) {
 			$files = [ $files ];
@@ -395,9 +385,8 @@ trait Interacts_With_Input {
 	 * Check that the given file is a valid file instance.
 	 *
 	 * @param  mixed $file
-	 * @return bool
 	 */
-	protected function is_valid_file( $file ) {
+	protected function is_valid_file( $file ): bool {
 		return $file instanceof Uploaded_File && $file->getPath() !== '';
 	}
 

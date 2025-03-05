@@ -21,9 +21,8 @@ trait Interacts_With_Content_Types {
 	 *
 	 * @param  string $actual
 	 * @param  string $type
-	 * @return bool
 	 */
-	public static function matches_type( $actual, $type ) {
+	public static function matches_type( $actual, $type ): bool {
 		if ( $actual === $type ) {
 			return true;
 		}
@@ -44,19 +43,23 @@ trait Interacts_With_Content_Types {
 
 	/**
 	 * Determine if the current request probably expects a JSON response.
-	 *
-	 * @return bool
 	 */
-	public function expects_json() {
-		return ( $this->ajax() && ! $this->pjax() && $this->accepts_any_content_type() ) || $this->wants_json();
+	public function expects_json(): bool {
+		if ( $this->ajax() && ! $this->pjax() && $this->accepts_any_content_type() ) {
+			return true;
+		}
+
+		if ( function_exists( 'wp_is_serving_rest_request' ) && wp_is_serving_rest_request() ) {
+			return true;
+		}
+
+		return (bool) $this->wants_json();
 	}
 
 	/**
 	 * Determine if the current request is asking for JSON.
-	 *
-	 * @return bool
 	 */
-	public function wants_json() {
+	public function wants_json(): bool {
 		$acceptable = $this->getAcceptableContentTypes();
 
 		return isset( $acceptable[0] ) && Str::contains( $acceptable[0], [ '/json', '+json' ] );
@@ -66,9 +69,8 @@ trait Interacts_With_Content_Types {
 	 * Determines whether the current requests accepts a given content type.
 	 *
 	 * @param  string|array $content_types
-	 * @return bool
 	 */
-	public function accepts( $content_types ) {
+	public function accepts( $content_types ): bool {
 		$accepts = $this->getAcceptableContentTypes();
 
 		if ( count( $accepts ) === 0 ) {
@@ -104,7 +106,7 @@ trait Interacts_With_Content_Types {
 		$content_types = (array) $content_types;
 
 		foreach ( $accepts as $accept ) {
-			if ( in_array( $accept, [ '*/*', '*' ] ) ) {
+			if ( in_array( $accept, [ '*/*', '*' ], true ) ) {
 				return $content_types[0];
 			}
 
@@ -127,10 +129,8 @@ trait Interacts_With_Content_Types {
 
 	/**
 	 * Determine if the current request accepts any content type.
-	 *
-	 * @return bool
 	 */
-	public function accepts_any_content_type() {
+	public function accepts_any_content_type(): bool {
 		$acceptable = $this->getAcceptableContentTypes();
 
 		return count( $acceptable ) === 0 || (
