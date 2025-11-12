@@ -31,11 +31,7 @@ class Implicit_Route_Binding {
 	 */
 	public static function resolve_for_route( Container $container, Request $request ): void {
 		$route      = $request->get_route();
-		$parameters = $request->get_route_parameters()?->all();
-
-		if ( ! $route instanceof \Mantle\Http\Routing\Route || ! $parameters ) {
-			return;
-		}
+		$parameters = $request->get_route_parameters()->all();
 
 		foreach ( $route->get_signature_parameters( Url_Routable::class ) as $parameter ) {
 			$parameter_name = static::get_parameter_name( $parameter->getName(), $parameters );
@@ -49,7 +45,7 @@ class Implicit_Route_Binding {
 				continue;
 			}
 
-			$instance = $container->make( Reflector::get_parameter_class_name( $parameter ) ); // @phpstan-ignore-line argument.type
+			$instance = $container->make( Reflector::get_parameter_class_name( $parameter ) );
 			$model    = $instance->resolve_route_binding( $parameter_value );
 
 			if ( ! $model ) {

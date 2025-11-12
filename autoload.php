@@ -107,7 +107,6 @@ if ( ! function_exists( 'render_view' ) ) {
 	 */
 	#[\Deprecated( 'Use view() instead.' )]
 	function render_view( ...$args ): void {
-		// @phpstan-ignore echo.nonString
 		echo view( ...$args ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 }

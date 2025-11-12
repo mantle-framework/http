@@ -59,12 +59,10 @@ class Rest_Route_Registrar extends Route_Registrar {
 	public function register_route( string|array $method, string $uri, Closure|array|string|null $action = null ): Route {
 		$method = Arr::wrap( $method );
 
-		assert( $this->router instanceof Router, 'Router instance is not of type Router.' );
-
 		return $this->router->add_rest_route(
 			methods: $method,
 			uri: $uri,
-			arguments: $this->normalize_arguments( $action ?? [], $uri, $method ),
+			arguments: $this->normalize_arguments( $action, $uri, $method ),
 		);
 	}
 
@@ -131,8 +129,6 @@ class Rest_Route_Registrar extends Route_Registrar {
 				return rest_ensure_response( $callback( $request ) );
 			}
 
-			assert( $this->router instanceof Router, 'Router instance is not of type Router.' );
-
 			$container = $this->router->get_container();
 
 			$container['events']->dispatch(
@@ -160,11 +156,9 @@ class Rest_Route_Registrar extends Route_Registrar {
 	 * Gather the middleware for the given route with resolved class names.
 	 *
 	 * @param string[] $middleware Middleware for the route.
-	 * @return array<callable>
+	 * @return array<string>
 	 */
 	public function gather_route_middleware( array $middleware ): array {
-		assert( $this->router instanceof Router, 'Router instance is not of type Router.' );
-
 		return collect( $middleware )
 			->map(
 				fn ( \Closure|string $name ) => (array) Middleware_Name_Resolver::resolve(
@@ -189,8 +183,6 @@ class Rest_Route_Registrar extends Route_Registrar {
 	 * @param string $route Route path.
 	 */
 	private function parse_route_action( mixed $action, string $route ): callable {
-		assert( $this->router instanceof Router, 'Router instance is not of type Router.' );
-
 		if ( is_callable( $action ) ) {
 			return $action;
 		}
@@ -200,31 +192,19 @@ class Rest_Route_Registrar extends Route_Registrar {
 			if ( Str::contains( $action, '@' ) ) {
 				[ $controller, $method ] = explode( '@', $action );
 
-				$callable = [ $this->router->get_container()->make( $controller ), $method ];
-
-				if ( is_callable( $callable ) ) {
-					return $callable;
-				}
+				return [ $this->router->get_container()->make( $controller ), $method ];
 			}
 
 			// Check for invokable classes.
 			if ( class_exists( $action ) && method_exists( $action, '__invoke' ) ) {
-				$callable = [ $this->router->get_container()->make( $action ), '__invoke' ];
-
-				if ( is_callable( $callable ) ) {
-					return $callable;
-				}
+				return [ $this->router->get_container()->make( $action ), '__invoke' ];
 			}
 		}
 
 		if ( is_array( $action ) && count( $action ) === 2 ) {
 			[ $controller, $method ] = $action;
 
-			$callable = [ $this->router->get_container()->make( $controller ), $method ];
-
-			if ( is_callable( $callable ) ) {
-				return $callable;
-			}
+			return [ $this->router->get_container()->make( $controller ), $method ];
 		}
 
 		throw new InvalidArgumentException( "Invalid REST API route action for [{$route}]: " . print_r( $action, true ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r

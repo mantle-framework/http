@@ -33,9 +33,7 @@ class Route_Registrar implements Registrar_Contract {
 	/**
 	 * The methods to dynamically pass through to the router.
 	 *
-	 * @todo Convert to an enum.
-	 *
-	 * @var string[]
+	 * @var array<mixed>
 	 */
 	public const HTTP_METHODS = [
 		'GET',
@@ -113,8 +111,6 @@ class Route_Registrar implements Registrar_Contract {
 	 * @param  \Closure|string $callback
 	 */
 	public function group( callable|string $callback ): static {
-		assert( $this->router instanceof Router, 'Router instance is required to create route groups.' );
-
 		$this->router->group( $this->attributes, $callback );
 
 		return $this;
@@ -128,15 +124,13 @@ class Route_Registrar implements Registrar_Contract {
 	 * @param  \Closure|array<mixed>|string|null $action
 	 */
 	public function register_route( string|array $method, string $uri, Closure|array|string|null $action = null ): Route {
-		assert( $this->router instanceof Router, 'Router instance is required to create route groups.' );
-
 		$method = match ( true ) {
 			is_array( $method ) => array_map( strtoupper( ... ), $method ),
 			'any' === $method => self::HTTP_METHODS,
 			default => [ strtoupper( $method ) ],
 		};
 
-		return $this->router->add_route( $method, $uri, $this->normalize_arguments( $action ?? [], $uri, $method ) );
+		return $this->router->add_route( $method, $uri, $this->normalize_arguments( $action, $uri, $method ) );
 	}
 
 	/**
@@ -180,8 +174,6 @@ class Route_Registrar implements Registrar_Contract {
 	public function rest_api( string $namespace, callable|string $callback_or_uri, callable|array|string $args = [] ): ?Route {
 		$namespace = trim( $namespace, '/' );
 
-		assert( $this->router instanceof Router, 'Router instance is required to create route groups.' );
-
 		$previous_registrar = $this->router->registrar;
 
 		$this->router->registrar = Rest_Route_Registrar::from_base( $this, $namespace );
@@ -200,15 +192,13 @@ class Route_Registrar implements Registrar_Contract {
 			$route = $this->router->registrar->register_route(
 				method: [ 'GET', 'HEAD' ],
 				uri: $callback_or_uri,
-				action: $args, // @phpstan-ignore-line argument.type
+				action: $args,
 			);
 
 			$this->router->registrar = $previous_registrar;
 
 			return $route;
 		}
-
-		assert( is_array( $args ), 'Route arguments must be an array if not a callable.' );
 
 		$args['methods'] = isset( $args['methods'] )
 			? Arr::wrap( $args['methods'] )
