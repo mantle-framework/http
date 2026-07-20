@@ -45,7 +45,7 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 	protected $route;
 
 	/**
-	 * All of the converted files for the request.
+	 * All the converted files for the request.
 	 *
 	 * @var array<\Mantle\Http\Uploaded_File>|null
 	 */
@@ -63,12 +63,13 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 	 *
 	 * Mirrors Symfony's version but will create a static instance of the class.
 	 */
+	#[\Override]
 	public static function createFromGlobals(): static {
 		$request = new static( $_GET, $_POST, [], $_COOKIE, $_FILES, $_SERVER ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPressVIPMinimum.Variables.RestrictedVariables, WordPress.Security.NonceVerification.Missing
 
 		if ( str_starts_with( (string) $request->headers->get( 'CONTENT_TYPE', '' ), 'application/x-www-form-urlencoded' ) && \in_array( strtoupper( (string) $request->server->get( 'REQUEST_METHOD', 'GET' ) ), [ 'PUT', 'DELETE', 'PATCH' ], true ) ) {
 			parse_str( $request->getContent(), $data );
-			$request->request = new InputBag( $data );
+			$request->request = new InputBag( $data ); // @phpstan-ignore-line argument.type
 		}
 
 		return $request;
@@ -164,7 +165,7 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 	}
 
 	/**
-	 * Get all of the segments for the request path.
+	 * Get all the segments for the request path.
 	 *
 	 * @return array<mixed>
 	 */
@@ -228,7 +229,7 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 	}
 
 	/**
-	 * Determine if the request is the result of an prefetch call.
+	 * Determine if the request is the result of a prefetch call.
 	 */
 	public function prefetch(): bool {
 		return 0 === strcasecmp( (string) $this->server->get( 'HTTP_X_MOZ' ), 'prefetch' ) ||
@@ -295,6 +296,7 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 	 * @param  string $key
 	 * @param  mixed  $default
 	 */
+	#[\Override]
 	public function get( string $key, mixed $default = null ): mixed { // phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod.Found
 		return parent::get( $key, $default );
 	}
@@ -351,7 +353,7 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 	}
 
 	/**
-	 * Get all of the input and files for the request.
+	 * Get all the input and files for the request.
 	 */
 	public function to_array(): array {
 		return $this->all();
@@ -368,7 +370,7 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 			$parameters = new ParameterBag(
 				array_filter(
 					$parameters,
-					fn ( $parameter ) => ! str_starts_with( $parameter, '_' ),
+					fn ( $parameter ) => ! str_starts_with( (string) $parameter, '_' ),
 					ARRAY_FILTER_USE_KEY
 				)
 			);
@@ -422,7 +424,7 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 	 */
 	public function offsetExists( mixed $offset ): bool {
 		return Arr::has(
-			$this->all() + $this->get_route_parameters()?->all(),
+			$this->all() + ( $this->get_route_parameters()?->all() ?? [] ),
 			$offset
 		);
 	}
@@ -468,7 +470,7 @@ class Request extends SymfonyRequest implements ArrayAccess, Arrayable {
 	/**
 	 * Get an input element from the request.
 	 *
-	 * @param  string $key
+	 * @param  string $key Key to get.
 	 */
 	public function __get( string $key ): mixed {
 		return Arr::get(

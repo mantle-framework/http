@@ -64,7 +64,7 @@ trait Interacts_With_Input {
 			return Str::substr( $header, 7 );
 		}
 
-		return $header;
+		return null;
 	}
 
 	/**
@@ -167,7 +167,7 @@ trait Interacts_With_Input {
 	/**
 	 * Get the keys for all of the input and files.
 	 *
-	 * @return array<string>
+	 * @return array<int|string>
 	 */
 	public function keys(): array {
 		return array_merge( array_keys( $this->input() ), $this->files->keys() );
